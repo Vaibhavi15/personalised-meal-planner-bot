@@ -38,14 +38,14 @@ def build_html_for_pdf(enriched_plan: dict) -> str:
     """
 
     for day, meals in enriched_plan.items():
-        html_output += f"<h2>🗓️ {html.escape(day)}</h2>"
+        html_output += f"<h2> {html.escape(day)}</h2>"
         html_output += """
         <table>
             <tr>
-                <th>🍽️ Meal</th>
-                <th>🍛 Dish</th>
-                <th>📊 Macros</th>
-                <th>🔗 Recipes</th>
+                <th>Meal</th>
+                <th>Dish</th>
+                <th>Macros</th>
+                <th>Recipes</th>
             </tr>
         """
 
@@ -57,7 +57,7 @@ def build_html_for_pdf(enriched_plan: dict) -> str:
             macros = html.escape(info.get("macros", ""))
             recipes = info.get("recipes", [])
             recipe_links = "<br>".join(
-                f"<a href='{html.escape(link)}'>🔗 Recipe {i+1}</a>" for i, link in enumerate(recipes)
+                f"<a href='{html.escape(link)}'>Recipe {i+1}</a>" for i, link in enumerate(recipes)
             )
             html_output += f"""
             <tr>
@@ -72,7 +72,7 @@ def build_html_for_pdf(enriched_plan: dict) -> str:
 
         if "Total Macros" in meals:
             total_macros = html.escape(meals["Total Macros"])
-            html_output += f"<p><strong>🧮 Total Macros:</strong> {total_macros}</p>"
+            html_output += f"<p><strong>Total Macros:</strong> {total_macros}</p>"
 
     html_output += "</body></html>"
     return html_output

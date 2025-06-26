@@ -1,13 +1,24 @@
 # app.py
 from xhtml2pdf import pisa
 import streamlit as st
-from io import BytesIO
 from meal_planner import generate_meal_plan, suggest_alternative_dish
 from recipe_finder import fetch_recipes, search_recipe_links
 from pdf_exporter import convert_html_to_pdf, build_html_for_pdf
+from supabase_rate_limiter import check_and_increment_usage, get_remaining_calls
 
 st.set_page_config(page_title="Personalized Meal Planner", layout="wide")
 st.title("🍽️ Personalized Meal Planner")
+
+if not st.experimental_user:
+    st.error("Please sign in to use this app.")
+    st.stop()
+
+user_email = st.experimental_user.email
+
+remaining = get_remaining_calls(user_email)
+LIMIT = 20
+
+st.sidebar.markdown(f"**Remaining calls:** `{remaining} / {LIMIT}`")
 
 # --- User Inputs ---
 st.sidebar.header("User Preferences")
@@ -28,6 +39,7 @@ if "plan" not in st.session_state:
 
 if st.sidebar.button("Generate Plan"):
     with st.spinner("Generating meal plan and fetching recipes..."):
+        check_and_increment_usage(user_email)
         plan = generate_meal_plan(diet, location, cuisine, variance, ingredients, days, meals, allergies)
         enriched = fetch_recipes(plan, location)
         st.session_state.plan = plan
@@ -90,6 +102,7 @@ for day, meals in enriched.items():
         if checkbox and meal_id not in st.session_state.replacements:
             st.session_state.replacements[meal_id] = None
             with st.spinner("Suggesting alternatives..."):
+                check_and_increment_usage(user_email)
                 st.session_state.alternatives[meal_id] = suggest_alternative_dish(
                     diet=diet,
                     location=location,
@@ -124,29 +137,28 @@ for day, meals in enriched.items():
         st.markdown("### 🧪 Total Macros")
         st.success(meals["Total Macros"])
 
-if st.button("✅ Replace Selected Dishes"):
-    for day, meals in st.session_state.enriched.items():
-        for meal_time, info in meals.items():
-            meal_id = f"{day}_{meal_time}".replace(" ", "_")
-            if meal_id in st.session_state.replacements and st.session_state.replacements[meal_id]:
-                new_dish = st.session_state.replacements[meal_id]
-                new_macros = next(
-                    (a["Macros"] for a in st.session_state.alternatives[meal_id] if a["Dish"] == new_dish),
-                    ""
-                )
-                plan[day][meal_time] = {
-                    "Dish": new_dish,
-                    "Macros": new_macros
-                }
-                st.session_state.enriched[day][meal_time] = {
-                    "dish": new_dish,
-                    "macros": new_macros,
-                    "recipes": search_recipe_links(new_dish, location)
-                }
-    st.rerun()
-
-    # --- Download PDF ---
+# --- Download PDF and Replace Dishes ---
 if enriched:
+    if st.button("✅ Replace Selected Dishes"):
+        for day, meals in st.session_state.enriched.items():
+            for meal_time, info in meals.items():
+                meal_id = f"{day}_{meal_time}".replace(" ", "_")
+                if meal_id in st.session_state.replacements and st.session_state.replacements[meal_id]:
+                    new_dish = st.session_state.replacements[meal_id]
+                    new_macros = next(
+                        (a["Macros"] for a in st.session_state.alternatives[meal_id] if a["Dish"] == new_dish),
+                        ""
+                    )
+                    plan[day][meal_time] = {
+                        "Dish": new_dish,
+                        "Macros": new_macros
+                    }
+                    st.session_state.enriched[day][meal_time] = {
+                        "dish": new_dish,
+                        "macros": new_macros,
+                        "recipes": search_recipe_links(new_dish, location)
+                    }
+        st.rerun()
     html_for_pdf = build_html_for_pdf(enriched)
     pdf_bytes = convert_html_to_pdf(html_for_pdf)
     if pdf_bytes:
