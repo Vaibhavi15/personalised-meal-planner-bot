@@ -11,6 +11,10 @@ st.title("🍽️ Personalized Meal Planner")
 
 user_email = st.experimental_user.email
 
+if hasattr(st, "user") and st.user:
+    user_info = st.user.to_dict()
+    user_email = user_info.get("email")
+
 remaining = get_remaining_calls(user_email)
 LIMIT = 20
 
