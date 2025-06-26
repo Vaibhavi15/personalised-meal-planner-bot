@@ -13,6 +13,12 @@ def get_remaining_calls(email):
     if res.data:
         used = res.data[0].get("count", 0)
         return max(0, LIMIT - used)
+    else:
+        supabase.table("usage_logs").insert({
+            "email": email,
+            "count": 0,
+            "updated_at": datetime.now().isoformat()
+        }).execute()
     return LIMIT
 
 def check_and_increment_usage(email):
@@ -27,10 +33,3 @@ def check_and_increment_usage(email):
             "count": count + 1,
             "updated_at": datetime.now().isoformat()
         }).eq("email", email).execute()
-    else:
-        # First time user
-        supabase.table("usage_logs").insert({
-            "email": email,
-            "count": 1,
-            "updated_at": datetime.now().isoformat()
-        }).execute()

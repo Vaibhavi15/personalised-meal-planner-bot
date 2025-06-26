@@ -4,3 +4,4 @@ requests
 python-dotenv
 xhtml2pdf
 supabase
+streamlit_google_auth
