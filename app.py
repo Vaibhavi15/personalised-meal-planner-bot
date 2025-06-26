@@ -9,10 +9,6 @@ from supabase_rate_limiter import check_and_increment_usage, get_remaining_calls
 st.set_page_config(page_title="Personalized Meal Planner", layout="wide")
 st.title("🍽️ Personalized Meal Planner")
 
-if not st.experimental_user:
-    st.error("Please sign in to use this app.")
-    st.stop()
-
 user_email = st.experimental_user.email
 
 remaining = get_remaining_calls(user_email)
