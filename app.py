@@ -11,37 +11,16 @@ import json
 st.set_page_config(page_title="Personalized Meal Planner", layout="wide")
 st.title("🍽️ Personalized Meal Planner")
 
-with open("google_credentials.json", "w") as f:
-    json.dump({
-        "installed": {   # some libraries expect an "installed" key around these fields
-            "client_id": st.secrets["client_id"],
-            "client_secret": st.secrets["client_secret"],
-            "redirect_uris": [st.secrets["redirect_uri"]],
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-        }
-    }, f)
-
-# 3b) Initialize the authenticator
-authenticator = Authenticate(
-    secret_credentials_path="google_credentials.json",
-    cookie_name="meal_planner_cookie",
-    cookie_key=st.secrets["cookie_secret"],    # define a random 32-byte in secrets.toml too
-    redirect_uri=st.secrets["redirect_uri"],
-)
-
-# 3c) Run the check → login flow
-authenticator.check_authentification()
-authenticator.login()
+def login_screen():
+    st.button("Log in with Google", on_click=st.login)
 
 # 3d) Gate the rest of your app
-if not st.session_state.get("connected"):
-    st.stop()
+if not st.user.is_logged_in:
+    login_screen()
 else:
-    if st.button('Log out'):
-        authenticator.logout()
+    st.button("Log out", on_click=st.logout)
 
-    user_email = st.session_state['user_info'].get('email')
+    user_email = st.user.email
 
     remaining = get_remaining_calls(user_email)
     LIMIT = 20
