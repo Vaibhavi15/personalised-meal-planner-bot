@@ -5,7 +5,6 @@ from meal_planner import generate_meal_plan, suggest_alternative_dish
 from recipe_finder import fetch_recipes, search_recipe_links
 from pdf_exporter import convert_html_to_pdf, build_html_for_pdf
 from supabase_rate_limiter import check_and_increment_usage, get_remaining_calls
-from streamlit_google_auth import Authenticate
 import json
 
 st.set_page_config(page_title="Personalized Meal Planner", layout="wide")
