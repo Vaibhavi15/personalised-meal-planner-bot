@@ -6,8 +6,6 @@ from recipe_finder import fetch_recipes, search_recipe_links
 from pdf_exporter import convert_html_to_pdf, build_html_for_pdf
 from supabase_rate_limiter import check_and_increment_usage, get_remaining_calls
 import json
-import os
-os.environ["WATCHDOG_OBSERVER"] = "false"
 
 st.set_page_config(page_title="Personalized Meal Planner", layout="wide")
 st.title("🍽️ Personalized Meal Planner")
